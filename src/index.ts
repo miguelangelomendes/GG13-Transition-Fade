@@ -1,3 +1,3 @@
-import GG13Dropdown from './components/App'
+import TransitionFade from './components/App'
 
-export { GG13Dropdown }
+export { TransitionFade }

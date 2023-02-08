@@ -1,40 +1,61 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 
 interface Props {
-  iconComponent: React.ReactNode
+  isShown: boolean
   children: React.ReactNode
+  duration?: number
   className?: string
-  iconClass?: string
-  containerClass?: string
+  timingFunction?: string
+  onClick?: () => void
+  onTransitionStart?: () => void
+  onTransitionEnd?: () => void
 }
 
-export default function Dropdown({
+export default function TransitionFade({
+  isShown,
   children,
-  iconComponent,
-  containerClass = '',
-  iconClass = '',
   className = '',
+  duration = 500,
+  timingFunction = 'ease-in-out',
+  onClick,
+  onTransitionStart,
+  onTransitionEnd,
 }: Props) {
-  const [isOpen, setIsOpen] = useState<boolean>(false)
+  const ref = useRef<HTMLDivElement>(null)
 
-  const handleClick = () => {
-    setIsOpen(!isOpen)
+  const handleTransitionStart = () => {
+    onTransitionStart?.()
   }
-  const handleClickOutside = () => {
-    setIsOpen(false)
+
+  const handleTransitionEnd = () => {
+    onTransitionEnd?.()
   }
+
+  useEffect(() => {
+    const target = ref.current
+    target?.addEventListener('transitionstart', handleTransitionStart)
+    target?.addEventListener('transitionend', handleTransitionEnd)
+
+    return () => {
+      target?.removeEventListener('transitionstart', () => handleTransitionStart)
+      target?.removeEventListener('transitionend', () => handleTransitionStart)
+    }
+  }, [ref])
 
   return (
-    <div className={`relative ${className}`}>
-      <div className={`clickable relative z-[3] ${iconClass}`} onClick={handleClick}>
-        {iconComponent}
-      </div>
-      {isOpen && (
-        <>
-          <div className='fixed inset-0 z-[1]' onClick={handleClickOutside} />
-          <div className={`absolute right-0 z-[3] mt-1 rounded-lg shadow-lg ${containerClass}`}>{children}</div>
-        </>
-      )}
+    <div
+      ref={ref}
+      className={className}
+      onClick={() => onClick?.()}
+      style={{
+        opacity: isShown ? 1 : 0,
+        transitionDuration: `${duration}ms`,
+        transitionProperty: 'opacity',
+        transitionTimingFunction: timingFunction,
+        msTransitionTimingFunction: timingFunction,
+      }}
+    >
+      {children}
     </div>
   )
 }
